@@ -101,7 +101,7 @@
       app.container.appendChild(card);
       app.visibleCards[data.key] = card;
     }
-
+    console.log(card);
     // Verifies the data provide is newer than what's already visible
     // on the card, if it's not bail, if it is, continue and update the
     // time saved in the card
@@ -171,7 +171,19 @@
     var url = 'https://query.yahooapis.com/v1/public/yql?format=json&q=' +
         statement;
     // TODO add cache logic here
-
+    if ('caches' in window) {
+      caches.match(url).then(function(response) {
+        if (response) {
+          response.json().then(function updateFromCache(json) {
+            var results = json.query.results;
+            results.key = key;
+            results.label = label;
+            results.created = json.query.created;
+            app.updateForecastCard(results);
+          });
+        }
+      });
+    }
     // Fetch the latest data.
     var request = new XMLHttpRequest();
     request.onreadystatechange = function() {
@@ -318,7 +330,7 @@
   app.selectedCities = localStorage.selectedCities;
   if (app.selectedCities) {
     app.selectedCities = JSON.parse(app.selectedCities);
-    app.selectedCities.forEach(function(city) {      
+    app.selectedCities.forEach(function(city) {
       app.getForecast(city.key, city.label);
 
     });
